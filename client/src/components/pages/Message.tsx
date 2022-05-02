@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {GraphQLSubscriptionConfig, graphql} from 'relay-runtime';
 import {
   IC_MSG_CAMERA,
   IC_MSG_IMAGE,
@@ -47,13 +48,17 @@ import React, {
   useState,
 } from 'react';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/core';
-import {createMessage, messagesQuery} from '../../relay/queries/Message';
+import {
+  createMessage,
+  deleteMessage,
+  messagesQuery,
+} from '../../relay/queries/Message';
 import {
   createMessageOptimisticUpdater,
   createMessageUpdater,
 } from '../../relay/updaters';
+import {useDeviceContext, useSnackbarContext} from '../../providers';
 import {
-  graphql,
   useLazyLoadQuery,
   useMutation,
   usePaginationFragment,
@@ -64,10 +69,10 @@ import {ChannelQuery} from '../../__generated__/ChannelQuery.graphql';
 import CustomLoadingIndicator from '../uis/CustomLoadingIndicator';
 import EmptyListItem from '../uis/EmptyListItem';
 import GiftedChat from '../uis/GiftedChat';
-import {GraphQLSubscriptionConfig} from 'relay-runtime';
 import {ImagePickerResult} from 'expo-image-picker';
 import type {MessageComponent_message$key} from '../../__generated__/MessageComponent_message.graphql';
 import type {MessageCreateMutation} from '../../__generated__/MessageCreateMutation.graphql';
+import {MessageDeleteMutation} from '../../__generated__/MessageDeleteMutation.graphql';
 import {MessageDeletedSubscription} from '../../__generated__/MessageDeletedSubscription.graphql';
 import MessageListItem from '../uis/MessageListItem';
 import {RootStackNavigationProps} from 'components/navigations/RootStackNavigator';
@@ -80,7 +85,6 @@ import styled from '@emotion/native';
 import {uploadSingleAsync} from '../../apis/upload';
 import useAppStateChangeHandler from '../../hooks/useAppStateChangeHandler';
 import {useAuthContext} from '../../providers/AuthProvider';
-import {useDeviceContext} from '../../providers';
 import {useProfileContext} from '../../providers/ProfileModalProvider';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useTheme} from 'dooboo-ui';
@@ -230,8 +234,36 @@ const MessagesFragment: FC<MessageProp> = ({channelId, messages, users}) => {
   const [commitMessage, messageInFlight] =
     useMutation<MessageCreateMutation>(createMessage);
 
+  const [commitMessageDelete] =
+    useMutation<MessageDeleteMutation>(deleteMessage);
+
   const {user} = useAuthContext();
   const {deviceKey} = useDeviceContext();
+  // const snackbar = useSnackbarContext();
+
+  // const messageDeleteAsync = async (): Promise<void> => {
+  //   const mutationConfig = {
+  //     variables: {
+  //       // TODO: 부모에서 선언하자
+  //       id,
+  //     },
+  //     onError: (_error: Error): void => {
+  //       snackbar?.openSnackbar({
+  //         text: getString('ERROR_OCCURED'),
+  //         type: 'warning',
+  //         styles: {
+  //           container: {
+  //             minWidth: '85%',
+  //             minHeight: '10%',
+  //             marginBottom: 50,
+  //             justifyContent: 'center',
+  //           },
+  //         },
+  //       });
+  //     },
+  //   };
+  //   commitMessageDelete(mutationConfig);
+  // };
 
   const submitMessage = (): void => {
     setMessage('');
@@ -388,6 +420,7 @@ const MessagesFragment: FC<MessageProp> = ({channelId, messages, users}) => {
         onPressPeerImage={(sender): void => {
           showModal({user: sender});
         }}
+        messageDeleteAsync={(): Promise<void> => messageDeleteAsync()}
         onPressMessageImage={(indexOfTheNode: number) => {
           let initialIndex = indexOfTheNode;
 

@@ -1,18 +1,18 @@
 import {Icon, useTheme} from 'dooboo-ui';
 import {Linking, StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {FC, useMemo, useState} from 'react';
-import {graphql, useFragment, useMutation} from 'react-relay';
+import {graphql, useFragment} from 'react-relay';
 
 import {IC_NO_IMAGE} from '../../utils/Icons';
 import Image from 'react-native-scalable-image';
-import type {MessageDeleteMutation} from '../../__generated__/MessageDeleteMutation.graphql';
+// import type {MessageDeleteMutation} from '../../__generated__/MessageDeleteMutation.graphql';
 import {MessageListItem_message$key} from '../../__generated__/MessageListItem_message.graphql';
 import ParsedText from 'react-native-parsed-text';
 import {ProfileModal_user$key} from '../../__generated__/ProfileModal_user.graphql';
 import {User} from '../../types/graphql';
 import VideoPlayer from './VideoPlayer';
 import {colors} from '../../theme';
-import {deleteMessage} from '../../relay/queries/Message';
+// import {deleteMessage} from '../../relay/queries/Message';
 import {getString} from '../../../STRINGS';
 import moment from 'moment';
 import {nanoid} from 'nanoid/non-secure';
@@ -255,6 +255,7 @@ interface Props {
 
   onPressPeerImage?: (sender: ProfileModal_user$key) => void;
   onPressMessageImage?: (index: number) => void;
+  messageDeleteAsync?: () => void;
   testID?: string;
 }
 
@@ -266,6 +267,7 @@ const MessageListItem: FC<Props> = ({
   nextItemDate,
   onPressPeerImage,
   onPressMessageImage,
+  // messageDeleteAsync,
   testID,
   userId,
 }: Props) => {
@@ -274,6 +276,8 @@ const MessageListItem: FC<Props> = ({
   const [mediaError, setMediaError] = useState('');
 
   const snackbar = useSnackbarContext();
+
+  // TODO: Message.tsx에서 useFragment 선언하고, 값만 내려주는 구조로 바꾸기
   const data = useFragment(fragment, item);
 
   const {
@@ -290,8 +294,8 @@ const MessageListItem: FC<Props> = ({
   const isPrevMessageSameUser = prevItemSender?.id === sender?.id;
   const isNextMessageSameUser = nextItemSender?.id === sender?.id;
 
-  const [commitMessageDelete] =
-    useMutation<MessageDeleteMutation>(deleteMessage);
+  // const [commitMessageDelete] =
+  //   useMutation<MessageDeleteMutation>(deleteMessage);
 
   const showDate = shouldShowDate(
     isPrevMessageSameUser,
@@ -461,7 +465,7 @@ const MessageListItem: FC<Props> = ({
         ) : null}
         <TouchableOpacity
           onPress={() => {
-            messageDeleteAsync();
+            messageDeleteAsync && messageDeleteAsync();
           }}
         >
           {!deletedAt && (
